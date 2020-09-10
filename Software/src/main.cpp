@@ -138,7 +138,6 @@ void update_set_panel(){
 	float val = 0;
 
 	if(state == S_STNG){
-	  // LCD.setColor(255,255,0);
     LCD.setTextColor(TFT_YELLOW, TFT_BLACK);
 		if(vc_sel == IS_V)
 			val = evr_to_voltage(evr_tmp);
@@ -146,7 +145,6 @@ void update_set_panel(){
 			val = evr_to_current(evr_tmp);
 	}
 	else{
-	  // LCD.setColor(255,255,255);
     LCD.setTextColor(TFT_WHITE, TFT_BLACK);
 
 		if(vc_sel == IS_V)
@@ -155,7 +153,6 @@ void update_set_panel(){
 			val = evr_to_current(evr_c);
 	}
 
-	// LCD.setBackColor(0, 0, 0);
 
 	if(vc_sel == IS_V){
 		LCD.drawString("set voltage", 15, 0);
