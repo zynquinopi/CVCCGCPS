@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPIFFS.h>	
 #include "driver/rmt.h"
 #include "TFT_eSPI.h"
 #include "Util.h"
@@ -339,7 +340,10 @@ void update_set_panel();
 void update_out_panel();
 void display_cursor();
 void init_gui();
+uint16_t read16(fs::File &f);
+uint32_t read32(fs::File &f);
 
+File bmpFS;
 TFT_eSPI LCD = TFT_eSPI();
 char state = S_STBY;
 bool vc_sel = IS_V;
@@ -354,6 +358,7 @@ int out_c = 0;
 
 void setup(){
   Serial.begin(115200);
+  Serial.println("start");
   Wire.begin(); //IO21:SDA    IO22:SCL
   Wire1.begin(19, 18, 400000);
   analogSetAttenuation(ADC_11db); //11db:0~3.6V   0db:0~1V
@@ -527,31 +532,134 @@ void display_cursor(){
 }
 
 
+uint16_t read16(fs::File &f) {
+  uint16_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read(); // MSB
+  return result;
+}
+
+uint32_t read32(fs::File &f) {
+  uint32_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read();
+  ((uint8_t *)&result)[2] = f.read();
+  ((uint8_t *)&result)[3] = f.read(); // MSB
+  return result;
+}
+
 void init_gui(){
   char s[16];	
   LCD.fillRect(0, 0, 320, 240, TFT_BLACK);
 
-  LCD.fillRect(0, 0, 10, 10, TFT_RED);
+  // SPIFFS.begin();	// ③SPIFFS開始 
+  // String wrfile = "/kuma.bmp"; 
+  // fr = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+  // String readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
+  // fr.close();	// ⑫	ファイルを閉じる
+  // Serial.print("SPIFFS Read:");	// ⑬シリアルモニタにEEPROM内容表示
+  // Serial.println(readStr);
 
-  LCD.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  LCD.drawString("set voltage", 15, 0);
-  dtostrf(evr_to_voltage(evr_v), 2, 3, s);
-  LCD.drawString(s, 15, 15);
-  LCD.drawString("V", 65, 15);
 
-  LCD.drawString("set current", 15, 120);
-  dtostrf(evr_to_current(evr_c), 1, 3, s);
-  LCD.drawString(s, 15, 135);
-  LCD.drawString("A", 65, 135);
+  // Open requested file on SD card
 
-  LCD.drawString("out voltage", 175, 0);
-  dtostrf(adc_to_voltage(out_v), 2, 3, s);
-  LCD.drawString(s, 175, 15);
-  LCD.drawString("V", 225, 15);
+  SPIFFS.begin();	// ③SPIFFS開始  
 
-  LCD.drawString("out current", 175, 120);
-  dtostrf(adc_to_current(out_c), 1, 3, s);
-  LCD.drawString(s, 175, 135);
-  LCD.drawString("A", 225, 135);
+  String wrfile = "/kuma24.bmp"; 
+  bmpFS = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+
+
+  if (!bmpFS) {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+
+  uint32_t startTime = millis();
+
+  uint16_t x = 0;
+  uint16_t y = 0;
+
+  
+  if (read16(bmpFS) == 0x4D42) {
+    Serial.println("0x4D42");
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+
+    uint16_t check;
+    check = read16(bmpFS);
+    uint16_t check1;
+    check1 = read16(bmpFS);
+    uint32_t check2;
+    check2 = read32(bmpFS);
+    Serial.println(check);
+    Serial.println(check1);
+    Serial.println(check2);
+
+    if ((check == 1) && (check1 == 24) && (check2 == 0)) {
+      y += h - 1;
+
+      LCD.setSwapBytes(true);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3 + padding];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (col = 0; col < w; col++) {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        // y is decremented as the BMP image is drawn bottom up
+        LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+      }
+      Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      Serial.println(" ms");
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+
+
+
+
+  // LCD.fillRect(0, 0, 10, 10, TFT_RED);
+
+  // LCD.setTextColor(TFT_WHITE, TFT_BLACK);
+
+  // LCD.drawString("set voltage", 15, 0);
+  // dtostrf(evr_to_voltage(evr_v), 2, 3, s);
+  // LCD.drawString(s, 15, 15);
+  // LCD.drawString("V", 65, 15);
+
+  // LCD.drawString("set current", 15, 120);
+  // dtostrf(evr_to_current(evr_c), 1, 3, s);
+  // LCD.drawString(s, 15, 135);
+  // LCD.drawString("A", 65, 135);
+
+  // LCD.drawString("out voltage", 175, 0);
+  // dtostrf(adc_to_voltage(out_v), 2, 3, s);
+  // LCD.drawString(s, 175, 15);
+  // LCD.drawString("V", 225, 15);
+
+  // LCD.drawString("out current", 175, 120);
+  // dtostrf(adc_to_current(out_c), 1, 3, s);
+  // LCD.drawString(s, 175, 135);
+  // LCD.drawString("A", 225, 135);
 }
