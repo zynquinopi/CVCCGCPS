@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPIFFS.h>	
+#include <stdio.h>
+#include <string>
 #include "driver/rmt.h"
 #include "TFT_eSPI.h"
 #include "Util.h"
@@ -340,8 +342,12 @@ void update_set_panel();
 void update_out_panel();
 void display_cursor();
 void init_gui();
+void drawbmp();
 uint16_t read16(fs::File &f);
 uint32_t read32(fs::File &f);
+
+uint32_t fpsCount = 0, fpsSec = 0;
+uint8_t  aCount = 1;
 
 File bmpFS;
 TFT_eSPI LCD = TFT_eSPI();
@@ -377,91 +383,107 @@ void setup(){
 
 
 void loop(){
-  Serial.println(but1_send, BIN);
-  if (Serial.available() > 0){
-    gc_key = Serial.read();
-    Serial.println(gc_key);
-  }
-  else {
-    gc_key = 'n';
-  }
-  out_v = analogRead(34);
-  out_c = analogRead(35);
+  // Serial.println(but1_send, BIN);
+  // if (Serial.available() > 0){
+  //   gc_key = Serial.read();
+  //   Serial.println(gc_key);
+  // }
+  // else {
+  //   gc_key = 'n';
+  // }
+  // out_v = analogRead(34);
+  // out_c = analogRead(35);
 
-  if(state == S_STBY){
-    switch (gc_key){
-      case 'u':
-        vc_sel = IS_V;
-        display_cursor();
-        break;
-      case 'd':
-        vc_sel = IS_C;
-        display_cursor();
-        break;
-      case 'a':
-        state = S_STNG;
-        if (vc_sel == IS_V)
-          evr_tmp = evr_v;
-        else if (vc_sel == IS_C)
-          evr_tmp = evr_c;
-        update_set_panel();
-        break;
-      case 's':
-        state = S_OUTP;
-        set_evr(0, evr_v);
-        break;
-      default:
-        break;
-    }
-  }
-  else if(state == S_STNG){
-    switch (gc_key){
-      case 'b':
-        state = S_STBY;
-        update_set_panel();
-        display_cursor();
-        break;
-      case 'a':
-        state = S_STBY;
-        if (vc_sel == IS_V)
-          evr_v = evr_tmp;
-        else if (vc_sel == IS_C)
-          evr_c = evr_tmp;
-        update_set_panel();
-        break;
-      case 'u':
-        if(evr_tmp < 127)
-          evr_tmp += 1;
-        update_set_panel();
-        break;
-      case 'd':
-        if(evr_tmp > 0)
-          evr_tmp -= 1;
-        update_set_panel();
-        break;
-      default:
-        break;
-    }
-  }
-  else if(state == S_OUTP){
-    switch (gc_key){
-      case 'b':
-        state = S_STBY;
-        set_evr(0, 0);
-        break;
-      default:
-        break;
-    }
-  }
+  // if(state == S_STBY){
+  //   switch (gc_key){
+  //     case 'u':
+  //       vc_sel = IS_V;
+  //       display_cursor();
+  //       break;
+  //     case 'd':
+  //       vc_sel = IS_C;
+  //       display_cursor();
+  //       break;
+  //     case 'a':
+  //       state = S_STNG;
+  //       if (vc_sel == IS_V)
+  //         evr_tmp = evr_v;
+  //       else if (vc_sel == IS_C)
+  //         evr_tmp = evr_c;
+  //       update_set_panel();
+  //       break;
+  //     case 's':
+  //       state = S_OUTP;
+  //       set_evr(0, evr_v);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
+  // else if(state == S_STNG){
+  //   switch (gc_key){
+  //     case 'b':
+  //       state = S_STBY;
+  //       update_set_panel();
+  //       display_cursor();
+  //       break;
+  //     case 'a':
+  //       state = S_STBY;
+  //       if (vc_sel == IS_V)
+  //         evr_v = evr_tmp;
+  //       else if (vc_sel == IS_C)
+  //         evr_c = evr_tmp;
+  //       update_set_panel();
+  //       break;
+  //     case 'u':
+  //       if(evr_tmp < 127)
+  //         evr_tmp += 1;
+  //       update_set_panel();
+  //       break;
+  //     case 'd':
+  //       if(evr_tmp > 0)
+  //         evr_tmp -= 1;
+  //       update_set_panel();
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
+  // else if(state == S_OUTP){
+  //   switch (gc_key){
+  //     case 'b':
+  //       state = S_STBY;
+  //       set_evr(0, 0);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
 
-  if(out_panel_period_cnt == OUT_PANEL_PERIOD){
-    out_panel_period_cnt = 0;
-    update_out_panel();
-  } else{
-    out_panel_period_cnt += 1;
-  }
+  // if(out_panel_period_cnt == OUT_PANEL_PERIOD){
+  //   out_panel_period_cnt = 0;
+  //   update_out_panel();
+  // } else{
+  //   out_panel_period_cnt += 1;
+  // }
 
-  delay(100);
+  // delay(100);
+
+  drawbmp();
+
+  //Count Frame rate
+  fpsCount++;
+  if (fpsSec != millis() / 1000) {
+    fpsSec = millis() / 1000;
+    Serial.printf("fps:%d\r\n",fpsCount);
+    fpsCount = 0;
+  }//Count Frame rate
+  fpsCount++;
+  if (fpsSec != millis() / 1000) {
+    fpsSec = millis() / 1000;
+    Serial.printf("fps:%d\r\n",fpsCount);
+    fpsCount = 0;
+  }
 }
 
 
@@ -549,7 +571,7 @@ uint32_t read32(fs::File &f) {
 }
 
 void init_gui(){
-  char s[16];	
+  // char s[16];	
   LCD.fillRect(0, 0, 320, 240, TFT_BLACK);
 
   // SPIFFS.begin();	// ③SPIFFS開始 
@@ -559,83 +581,6 @@ void init_gui(){
   // fr.close();	// ⑫	ファイルを閉じる
   // Serial.print("SPIFFS Read:");	// ⑬シリアルモニタにEEPROM内容表示
   // Serial.println(readStr);
-
-
-
-  // Open requested file on SD card
-
-  SPIFFS.begin();	// ③SPIFFS開始  
-
-  String wrfile = "/kuma24.bmp"; 
-  bmpFS = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
-
-
-  if (!bmpFS) {
-    Serial.print("File not found");
-    return;
-  }
-
-  uint32_t seekOffset;
-  uint16_t w, h, row, col;
-  uint8_t  r, g, b;
-
-  uint32_t startTime = millis();
-
-  uint16_t x = 0;
-  uint16_t y = 0;
-
-  
-  if (read16(bmpFS) == 0x4D42) {
-    Serial.println("0x4D42");
-    read32(bmpFS);
-    read32(bmpFS);
-    seekOffset = read32(bmpFS);
-    read32(bmpFS);
-    w = read32(bmpFS);
-    h = read32(bmpFS);
-
-    uint16_t check;
-    check = read16(bmpFS);
-    uint16_t check1;
-    check1 = read16(bmpFS);
-    uint32_t check2;
-    check2 = read32(bmpFS);
-    Serial.println(check);
-    Serial.println(check1);
-    Serial.println(check2);
-
-    if ((check == 1) && (check1 == 24) && (check2 == 0)) {
-      y += h - 1;
-
-      LCD.setSwapBytes(true);
-      bmpFS.seek(seekOffset);
-
-      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
-      uint8_t lineBuffer[w * 3 + padding];
-
-      for (row = 0; row < h; row++) {
-        bmpFS.read(lineBuffer, sizeof(lineBuffer));
-        uint8_t*  bptr = lineBuffer;
-        uint16_t* tptr = (uint16_t*)lineBuffer;
-        // Convert 24 to 16 bit colours
-        for (col = 0; col < w; col++) {
-          b = *bptr++;
-          g = *bptr++;
-          r = *bptr++;
-          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-        }
-
-        // Push the pixel row to screen, pushImage will crop the line if needed
-        // y is decremented as the BMP image is drawn bottom up
-        LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
-      }
-      Serial.print("Loaded in "); Serial.print(millis() - startTime);
-      Serial.println(" ms");
-    }
-    else Serial.println("BMP format not recognized.");
-  }
-  bmpFS.close();
-
 
 
 
@@ -662,4 +607,94 @@ void init_gui(){
   // dtostrf(adc_to_current(out_c), 1, 3, s);
   // LCD.drawString(s, 175, 135);
   // LCD.drawString("A", 225, 135);
+}
+
+void drawbmp(){
+
+  if(aCount > 4){
+    aCount =1;
+  }
+
+  SPIFFS.begin();	// ③SPIFFS開始  
+  String wrfile;
+  if(aCount == 1){
+    wrfile = "/kuma24_1.bmp";
+  }else if(aCount == 2){
+    wrfile = "/kuma24_2.bmp";
+  }else if(aCount == 3){
+    wrfile = "/kuma24_3.bmp";
+  }else if(aCount == 4){
+    wrfile = "/kuma24_4.bmp";
+  }
+
+  bmpFS = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+
+
+  if (!bmpFS) {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+
+  // uint32_t startTime = millis();
+
+  uint16_t x = 0;
+  uint16_t y = 0;
+
+  
+  if (read16(bmpFS) == 0x4D42) {
+    // Serial.println("0x4D42");
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+
+    uint16_t check;
+    check = read16(bmpFS);
+    uint16_t check1;
+    check1 = read16(bmpFS);
+    uint32_t check2;
+    check2 = read32(bmpFS);
+    // Serial.println(check);
+    // Serial.println(check1);
+    // Serial.println(check2);
+
+    if ((check == 1) && (check1 == 24) && (check2 == 0)) {
+      y += h - 1;
+
+      LCD.setSwapBytes(true);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3 + padding];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (col = 0; col < w; col++) {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        // y is decremented as the BMP image is drawn bottom up
+        LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+      }
+      // Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      // Serial.println(" ms");
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+
+  aCount +=1;
 }
