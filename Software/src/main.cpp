@@ -379,6 +379,7 @@ void setup(){
   set_evr(0, 0);
   set_evr(1, 0);
   init_gui();
+  drawbmp();
 }
 
 
@@ -469,21 +470,21 @@ void loop(){
 
   // delay(100);
 
-  drawbmp();
+  // drawbmp();
 
   //Count Frame rate
-  fpsCount++;
-  if (fpsSec != millis() / 1000) {
-    fpsSec = millis() / 1000;
-    Serial.printf("fps:%d\r\n",fpsCount);
-    fpsCount = 0;
-  }//Count Frame rate
-  fpsCount++;
-  if (fpsSec != millis() / 1000) {
-    fpsSec = millis() / 1000;
-    Serial.printf("fps:%d\r\n",fpsCount);
-    fpsCount = 0;
-  }
+  // fpsCount++;
+  // if (fpsSec != millis() / 1000) {
+  //   fpsSec = millis() / 1000;
+  //   Serial.printf("fps:%d\r\n",fpsCount);
+  //   fpsCount = 0;
+  // }//Count Frame rate
+  // fpsCount++;
+  // if (fpsSec != millis() / 1000) {
+  //   fpsSec = millis() / 1000;
+  //   Serial.printf("fps:%d\r\n",fpsCount);
+  //   fpsCount = 0;
+  // }
 }
 
 
@@ -618,13 +619,13 @@ void drawbmp(){
   SPIFFS.begin();	// ③SPIFFS開始  
   String wrfile;
   if(aCount == 1){
-    wrfile = "/kuma24_1.bmp";
+    wrfile = "/kuma8.bmp";
   }else if(aCount == 2){
-    wrfile = "/kuma24_2.bmp";
+    wrfile = "/kuma8.bmp";
   }else if(aCount == 3){
-    wrfile = "/kuma24_3.bmp";
+    wrfile = "/kuma8.bmp";
   }else if(aCount == 4){
-    wrfile = "/kuma24_4.bmp";
+    wrfile = "/kuma8.bmp";
   }
 
   bmpFS = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
@@ -660,11 +661,11 @@ void drawbmp(){
     check1 = read16(bmpFS);
     uint32_t check2;
     check2 = read32(bmpFS);
-    // Serial.println(check);
-    // Serial.println(check1);
-    // Serial.println(check2);
+    Serial.println(check);
+    Serial.println(check1);
+    Serial.println(check2);
 
-    if ((check == 1) && (check1 == 24) && (check2 == 0)) {
+    if ((check == 1) && (check1 == 8) && (check2 == 0)) {
       y += h - 1;
 
       LCD.setSwapBytes(true);
@@ -675,19 +676,19 @@ void drawbmp(){
 
       for (row = 0; row < h; row++) {
         bmpFS.read(lineBuffer, sizeof(lineBuffer));
-        uint8_t*  bptr = lineBuffer;
-        uint16_t* tptr = (uint16_t*)lineBuffer;
-        // Convert 24 to 16 bit colours
-        for (col = 0; col < w; col++) {
-          b = *bptr++;
-          g = *bptr++;
-          r = *bptr++;
-          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-        }
+        // uint8_t*  bptr = lineBuffer;
+        // uint16_t* tptr = (uint16_t*)lineBuffer;
+        // // Convert 24 to 16 bit colours
+        // for (col = 0; col < w; col++) {
+        //   b = *bptr++;
+        //   g = *bptr++;
+        //   r = *bptr++;
+        //   *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        // }
 
         // Push the pixel row to screen, pushImage will crop the line if needed
         // y is decremented as the BMP image is drawn bottom up
-        LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+        LCD.pushImage(x, y--, w, 3, lineBuffer, true);
       }
       // Serial.print("Loaded in "); Serial.print(millis() - startTime);
       // Serial.println(" ms");
