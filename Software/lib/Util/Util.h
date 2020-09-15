@@ -1,5 +1,3 @@
-#include "Util.cpp"
-
 void set_evr(char vc_sel, char val);
 
 float evr_to_voltage(char evr_v);
