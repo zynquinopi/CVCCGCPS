@@ -36,29 +36,29 @@ void setup(void) {
 
 void loop() {
   Serial.println("Command1");
-  img.pushImage(0, 0, bmpWidth, bmpHeight, kuma4);
-  // drawbmp("/kuma24_1.bmp") ;
+  // img.pushImage(0, 0, bmpWidth, bmpHeight, kuma4);
+  drawbmp("/kuma16_1.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
   Serial.println("Command2");
   img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
-  // drawbmp("/kuma24_2.bmp") ;
+  // drawbmp("/kuma16_2.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
   Serial.println("Command3");
   img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
-  // drawbmp("/kuma24_3.bmp") ;
+  // drawbmp("/kuma16_3.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
   Serial.println("Command4");
   img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
-  // drawbmp("/kuma24_4.bmp") ;
+  // drawbmp("/kuma16_4.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
@@ -131,7 +131,7 @@ void drawbmp(String wrfile){
     Serial.println(check1);
     Serial.println(check2);
 
-    if ((check == 1) && (check1 == 24) && (check2 == 0)) {
+    if ((check == 1) && (check1 == 16) && (check2 == 0)) {
       y += h - 1;
 
       LCD.setSwapBytes(true);
@@ -141,34 +141,38 @@ void drawbmp(String wrfile){
       uint8_t lineBuffer[w * 3 + padding];
       Serial.print("padding:");
       Serial.println(padding);
-      uint16_t line[bmpWidth * bmpHeight];
+      uint8_t line[bmpWidth * bmpHeight * 2];
       Serial.print("line:");
       Serial.println(sizeof(line));
       Serial.println(sizeof(lineBuffer));
       uint16_t* lptr = (uint16_t*)line;
 
-      for (row = 0; row < h; row++) {
-        bmpFS.read(lineBuffer, sizeof(lineBuffer));
-        uint8_t*  bptr = lineBuffer;
-        uint16_t* tptr = (uint16_t*)lineBuffer;
-        // Convert 24 to 16 bit colours
-        for (col = 0; col < w; col++) {
-          b = *bptr++;
-          g = *bptr++;
-          r = *bptr++;
-          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-          // *lptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-        }
+      // for (row = 0; row < h; row++) {
+      //   bmpFS.read(lineBuffer, sizeof(lineBuffer));
+      //   uint8_t*  bptr = lineBuffer;
+      //   uint16_t* tptr = (uint16_t*)lineBuffer;
+      //   // Convert 24 to 16 bit colours
+      //   for (col = 0; col < w; col++) {
+      //     b = *bptr++;
+      //     g = *bptr++;
+      //     r = *bptr++;
+      //     *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+      //     // *lptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+      //   }
 
-        // Push the pixel row to screen, pushImage will crop the line if needed
-        // y is decremented as the BMP image is drawn bottom up
-        // LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
-        // Serial.println("xxxxxxxxx");
-        // Serial.println(sizeof((uint16_t*)lineBuffer));
-        // img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)lineBuffer); 
+      //   // Push the pixel row to screen, pushImage will crop the line if needed
+      //   // y is decremented as the BMP image is drawn bottom up
+      //   // LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+      //   // Serial.println("xxxxxxxxx");
+      //   // Serial.println(sizeof((uint16_t*)lineBuffer));
+      //   // img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)lineBuffer); 
 
-      }
-      // img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)line);
+      // }
+
+      bmpFS.read(line, sizeof(line));
+      img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)line);
+
+
       // Serial.print("Loaded in "); Serial.print(millis() - startTime);
       // Serial.println(" ms");
     }
