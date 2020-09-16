@@ -1,12 +1,12 @@
 #include <SPIFFS.h>	
 #include <TFT_eSPI.h>
 #include <SPI.h>
-// #include "kuma1.h"
-// #include "kuma2.h"
-// #include "kuma3.h"
+#include "kuma1.h"
+#include "kuma2.h"
+#include "kuma3.h"
 
-const uint16_t pngWidth = 320;
-const uint16_t pngHeight = 240;
+const uint16_t bmpWidth = 320;
+const uint16_t bmpHeight = 240;
 
 TFT_eSPI LCD = TFT_eSPI();
 TFT_eSprite img = TFT_eSprite(&LCD);
@@ -19,38 +19,45 @@ File bmpFS;
 
 
 void setup(void) {
+  Serial.begin(115200);
+  Serial.println("start");
   LCD.init();
   LCD.setRotation(1);
   LCD.fillScreen(TFT_BLACK);  
 
   img.setColorDepth(8);
 
-  img.createSprite(pngWidth, pngHeight);
+  img.createSprite(320, 240);
   img.setSwapBytes(true);
   img.fillSprite(TFT_BLACK);
+  Serial.println("setup ok");
 }
 
 void loop() {
-  //img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
+  Serial.println("Command1");
+  // img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
   drawbmp("/kuma24_1.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
-  //img.pushImage(0, 0, pngWidth, pngHeight, kuma2);
-  drawbmp("/kuma24_2.bmp") ;
+  Serial.println("Command2");
+  img.pushImage(0, 0, pngWidth, pngHeight, kuma2);
+  // drawbmp("/kuma24_2.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
-  //img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
-  drawbmp("/kuma24_3.bmp") ;
+  Serial.println("Command3");
+  img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
+  // drawbmp("/kuma24_3.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
 
-  //img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
-  drawbmp("/kuma24_4.bmp") ;
+  Serial.println("Command4");
+  img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
+  // drawbmp("/kuma24_4.bmp") ;
   img.pushSprite(0, 0);
 
   delay(100);
@@ -113,9 +120,9 @@ void drawbmp(String wrfile){
     check1 = read16(bmpFS);
     uint32_t check2;
     check2 = read32(bmpFS);
-    // Serial.println(check);
-    // Serial.println(check1);
-    // Serial.println(check2);
+    Serial.println(check);
+    Serial.println(check1);
+    Serial.println(check2);
 
     if ((check == 1) && (check1 == 24) && (check2 == 0)) {
       y += h - 1;
@@ -125,6 +132,8 @@ void drawbmp(String wrfile){
 
       uint16_t padding = (4 - ((w * 3) & 3)) & 3;
       uint8_t lineBuffer[w * 3 + padding];
+      uint16_t line[bmpWidth * bmpHeight];
+      Serial.println(sizeof(lineBuffer));
 
       for (row = 0; row < h; row++) {
         bmpFS.read(lineBuffer, sizeof(lineBuffer));
@@ -141,7 +150,9 @@ void drawbmp(String wrfile){
         // Push the pixel row to screen, pushImage will crop the line if needed
         // y is decremented as the BMP image is drawn bottom up
         // LCD.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
-        img.pushImage(0, 0, pngWidth, pngHeight, (uint16_t*)lineBuffer); 
+        Serial.println("xxxxxxxxx");
+        Serial.println(sizeof((uint16_t*)lineBuffer));
+        img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)lineBuffer); 
 
       }
       // Serial.print("Loaded in "); Serial.print(millis() - startTime);
