@@ -12,7 +12,9 @@ void setup(void) {
   LCD.setRotation(1);
   LCD.fillScreen(TFT_BLACK);  
 
-  img.createSprite(pngWidth, pngHeight);
+  img.setColorDepth(8);
+
+  img.createSprite(320, 240);
   img.setSwapBytes(true);
   img.fillSprite(TFT_BLACK);
 }
@@ -21,11 +23,17 @@ void loop() {
   img.pushImage(0, 0, pngWidth, pngHeight, kuma1); 
   img.pushSprite(32, 24);  
 
+  delay(100);
+
   img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
   img.pushSprite(32, 24);
 
+  delay(100);
+
   img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
   img.pushSprite(32, 24);
+
+  delay(100);
 }
 
 
