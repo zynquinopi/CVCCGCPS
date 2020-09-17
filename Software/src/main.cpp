@@ -37,33 +37,45 @@ void setup(void) {
 }
 
 void loop() {
-  Serial.println("Command1");
+  // Serial.println("Command1");
+  
   // img.pushImage(0, 0, bmpWidth, bmpHeight, kuma4);
+  unsigned long read_start = millis();
   drawbmp("/kuma1.bmp") ;
+  // img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
+  unsigned long read_end = millis();
+  Serial.print("Read time : ");
+  Serial.println(read_end - read_start);
+
+
   // img.pushImage(0, 0, kumaH1Width, kumaH1Height, kumaH1);
   // img.pushImage(0, 120, kumaH2Width, kumaH2Height, kumaH2);
+  unsigned long write_start = millis();
   img.pushSprite(0, 0);
+  unsigned long write_end = millis();
+  Serial.print("Write time : ");
+  Serial.println(write_end - write_start);
 
   // delay(100);
 
-  Serial.println("Command2");
-  // img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
-  drawbmp("/kuma2.bmp") ;
-  img.pushSprite(0, 0);
+  // Serial.println("Command2");
+  // // img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
+  // drawbmp("/kuma2.bmp") ;
+  // img.pushSprite(0, 0);
 
-  // delay(100);
+  // // delay(100);
 
-  Serial.println("Command3");
-  // img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
-  drawbmp("/kuma3.bmp") ;
-  img.pushSprite(0, 0);
+  // Serial.println("Command3");
+  // // img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
+  // drawbmp("/kuma3.bmp") ;
+  // img.pushSprite(0, 0);
 
-  // delay(100);
+  // // delay(100);
 
-  Serial.println("Command4");
-  img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
-  // drawbmp("/kuma16_4.bmp") ;
-  img.pushSprite(0, 0);
+  // Serial.println("Command4");
+  // img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
+  // // drawbmp("/kuma16_4.bmp") ;
+  // img.pushSprite(0, 0);
 
   // delay(100);
 }
@@ -89,13 +101,13 @@ void drawbmp(String wrfile){
   SPIFFS.begin();	// ③SPIFFS開始  
   //String wrfile;
 
-  Serial.println("xxxxx0");
+  // Serial.println("xxxxx0");
 
   //wrfile = "/kuma24_1.bmp";
 
   bmpFS = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
 
-  Serial.println("xxxxx1");
+  // Serial.println("xxxxx1");
 
 
   if (!bmpFS) {
@@ -103,7 +115,7 @@ void drawbmp(String wrfile){
     return;
   }
 
-  Serial.println("xxxxx2");
+  // Serial.println("xxxxx2");
 
   uint32_t seekOffset;
   uint16_t w, h, row, col;
@@ -114,7 +126,7 @@ void drawbmp(String wrfile){
   uint16_t x = 0;
   uint16_t y = 0;
 
-  Serial.println("xxxx");
+  // Serial.println("xxxx");
 
   if (read16(bmpFS) == 0x4D42) {
     Serial.println("0x4D42");
@@ -131,14 +143,14 @@ void drawbmp(String wrfile){
     check1 = read16(bmpFS);
     uint32_t check2;
     check2 = read32(bmpFS);
-    Serial.println(check);
-    Serial.println(check1);
-    Serial.println(check2);
+    // Serial.println(check);
+    // Serial.println(check1);
+    // Serial.println(check2);
 
     if ((check == 1) && (check1 == 8) && (check2 == 0)) {
 
       uint32_t imgsize;
-      Serial.print("imgsize:");
+      // Serial.print("imgsize:");
       imgsize = read32(bmpFS);
       Serial.println(imgsize);
 
