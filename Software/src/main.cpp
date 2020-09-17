@@ -131,17 +131,24 @@ void drawbmp(String wrfile){
     check1 = read16(bmpFS);
     uint32_t check2;
     check2 = read32(bmpFS);
-    // Serial.println(check);
-    // Serial.println(check1);
-    // Serial.println(check2);
+    Serial.println(check);
+    Serial.println(check1);
+    Serial.println(check2);
 
-    if ((check == 1) && (check1 == 16) && (check2 == 3)) {
+    if ((check == 1) && (check1 == 8) && (check2 == 0)) {
+
+      uint32_t imgsize;
+      Serial.print("imgsize:");
+      imgsize = read32(bmpFS);
+      Serial.println(imgsize);
+
+
       y += h - 1;
 
       LCD.setSwapBytes(true);
       bmpFS.seek(seekOffset);
 
-      uint16_t read_block = 10;
+      // uint16_t read_block = 10;
 
       // uint16_t padding = (4 - ((w * 3) & 3)) & 3;
       // uint8_t lineBuffer[w * 3 + padding];
@@ -149,9 +156,9 @@ void drawbmp(String wrfile){
       // Serial.println(padding);
 
       // uint8_t line[bmpWidth / 2 * bmpHeight * 2];
-      uint8_t line[w * read_block * 2];
-      Serial.print("line:");
-      Serial.println(sizeof(line));
+      // uint8_t line[w * read_block * 2];
+      // Serial.print("line:");
+      // Serial.println(sizeof(line));
       // Serial.println(sizeof(lineBuffer));
       // uint16_t* lptr = (uint16_t*)line;
 
@@ -177,10 +184,12 @@ void drawbmp(String wrfile){
 
       // }
 
-      for (row = 0; row < h / read_block; row++) {
-        bmpFS.read(line, sizeof(line));
-        img.pushImage(0, row * read_block, bmpWidth, read_block, (uint16_t*)line);
-      }
+      // for (row = 0; row < h / read_block; row++) {
+      //   bmpFS.read(line, sizeof(line));
+      //   img.pushImage(0, row * read_block, bmpWidth, read_block, (uint16_t*)line);
+      // }
+
+      bmpFS.read((uint8_t*)img.getPointer(), imgsize);
 
       // bmpFS.read(line, sizeof(line));
       // img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)line);
