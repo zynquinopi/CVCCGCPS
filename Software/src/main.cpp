@@ -5,6 +5,8 @@
 #include "kuma2.h"
 #include "kuma3.h"
 #include "kuma4.h"
+#include "kumaH1.h"
+#include "kumaH2.h"
 
 const uint16_t bmpWidth = 320;
 const uint16_t bmpHeight = 240;
@@ -37,10 +39,12 @@ void setup(void) {
 void loop() {
   Serial.println("Command1");
   // img.pushImage(0, 0, bmpWidth, bmpHeight, kuma4);
-  drawbmp("/kuma16_1.bmp") ;
+  // drawbmp("/kuma16_1.bmp") ;
+  img.pushImage(0, 0, kumaH1Width, kumaH1Height, kumaH1);
+  img.pushImage(0, 120, kumaH2Width, kumaH2Height, kumaH2);
   img.pushSprite(0, 0);
 
-  delay(100);
+  delay(1000);
 
   Serial.println("Command2");
   img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
