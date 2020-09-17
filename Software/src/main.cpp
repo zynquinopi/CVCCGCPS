@@ -39,33 +39,33 @@ void setup(void) {
 void loop() {
   Serial.println("Command1");
   // img.pushImage(0, 0, bmpWidth, bmpHeight, kuma4);
-  // drawbmp("/kuma16_1.bmp") ;
-  img.pushImage(0, 0, kumaH1Width, kumaH1Height, kumaH1);
-  img.pushImage(0, 120, kumaH2Width, kumaH2Height, kumaH2);
+  drawbmp("/kuma1.bmp") ;
+  // img.pushImage(0, 0, kumaH1Width, kumaH1Height, kumaH1);
+  // img.pushImage(0, 120, kumaH2Width, kumaH2Height, kumaH2);
   img.pushSprite(0, 0);
 
-  delay(1000);
+  // delay(100);
 
   Serial.println("Command2");
-  img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
-  // drawbmp("/kuma16_2.bmp") ;
+  // img.pushImage(0, 0, pngWidth, pngHeight, kuma1);
+  drawbmp("/kuma2.bmp") ;
   img.pushSprite(0, 0);
 
-  delay(100);
+  // delay(100);
 
   Serial.println("Command3");
-  img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
-  // drawbmp("/kuma16_3.bmp") ;
+  // img.pushImage(0, 0, pngWidth, pngHeight, kuma2); 
+  drawbmp("/kuma3.bmp") ;
   img.pushSprite(0, 0);
 
-  delay(100);
+  // delay(100);
 
   Serial.println("Command4");
   img.pushImage(0, 0, pngWidth, pngHeight, kuma3); 
   // drawbmp("/kuma16_4.bmp") ;
   img.pushSprite(0, 0);
 
-  delay(100);
+  // delay(100);
 }
 
 uint16_t read16(fs::File &f) {
@@ -107,7 +107,7 @@ void drawbmp(String wrfile){
 
   uint32_t seekOffset;
   uint16_t w, h, row, col;
-  uint8_t  r, g, b;
+  // uint8_t  r, g, b;
 
   // uint32_t startTime = millis();
 
@@ -115,7 +115,7 @@ void drawbmp(String wrfile){
   uint16_t y = 0;
 
   Serial.println("xxxx");
-  
+
   if (read16(bmpFS) == 0x4D42) {
     Serial.println("0x4D42");
     read32(bmpFS);
@@ -131,25 +131,29 @@ void drawbmp(String wrfile){
     check1 = read16(bmpFS);
     uint32_t check2;
     check2 = read32(bmpFS);
-    Serial.println(check);
-    Serial.println(check1);
-    Serial.println(check2);
+    // Serial.println(check);
+    // Serial.println(check1);
+    // Serial.println(check2);
 
-    if ((check == 1) && (check1 == 16) && (check2 == 0)) {
+    if ((check == 1) && (check1 == 16) && (check2 == 3)) {
       y += h - 1;
 
       LCD.setSwapBytes(true);
       bmpFS.seek(seekOffset);
 
-      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
-      uint8_t lineBuffer[w * 3 + padding];
-      Serial.print("padding:");
-      Serial.println(padding);
-      uint8_t line[bmpWidth * bmpHeight * 2];
+      uint16_t read_block = 10;
+
+      // uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      // uint8_t lineBuffer[w * 3 + padding];
+      // Serial.print("padding:");
+      // Serial.println(padding);
+
+      // uint8_t line[bmpWidth / 2 * bmpHeight * 2];
+      uint8_t line[w * read_block * 2];
       Serial.print("line:");
       Serial.println(sizeof(line));
-      Serial.println(sizeof(lineBuffer));
-      uint16_t* lptr = (uint16_t*)line;
+      // Serial.println(sizeof(lineBuffer));
+      // uint16_t* lptr = (uint16_t*)line;
 
       // for (row = 0; row < h; row++) {
       //   bmpFS.read(lineBuffer, sizeof(lineBuffer));
@@ -173,8 +177,13 @@ void drawbmp(String wrfile){
 
       // }
 
-      bmpFS.read(line, sizeof(line));
-      img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)line);
+      for (row = 0; row < h / read_block; row++) {
+        bmpFS.read(line, sizeof(line));
+        img.pushImage(0, row * read_block, bmpWidth, read_block, (uint16_t*)line);
+      }
+
+      // bmpFS.read(line, sizeof(line));
+      // img.pushImage(0, 0, bmpWidth, bmpHeight, (uint16_t*)line);
 
 
       // Serial.print("Loaded in "); Serial.print(millis() - startTime);
